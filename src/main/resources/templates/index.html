@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TrueReturn - Product Verification</title>
+
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #f4f6f8;
+            margin: 0;
+            padding: 0;
+        }
+
+        .container {
+            width: 90%;
+            max-width: 600px;
+            margin: 80px auto;
+            background: white;
+            padding: 35px;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            text-align: center;
+        }
+
+        h1 {
+            margin-bottom: 10px;
+        }
+
+        .subtitle {
+            color: #666;
+            margin-bottom: 30px;
+        }
+
+        input {
+            width: 90%;
+            padding: 12px;
+            margin-bottom: 15px;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+            font-size: 16px;
+        }
+
+        button {
+            padding: 12px 25px;
+            border: none;
+            border-radius: 6px;
+            background: #222;
+            color: white;
+            font-size: 16px;
+            cursor: pointer;
+        }
+
+        button:hover {
+            opacity: 0.85;
+        }
+
+        #result {
+            margin-top: 25px;
+            padding: 20px;
+            border-radius: 8px;
+            display: none;
+        }
+
+        .valid {
+            background: #e8f5e9;
+        }
+
+        .invalid {
+            background: #ffebee;
+        }
+    </style>
+</head>
+
+<body>
+
+<div class="container">
+
+    <h1>TrueReturn</h1>
+
+    <p class="subtitle">
+        Product Verification System
+    </p>
+
+    <input
+        type="text"
+        id="productCode"
+        placeholder="Enter Product Code"
+    >
+
+    <br>
+
+    <button onclick="verifyProduct()">
+        Verify Product
+    </button>
+
+    <div id="result"></div>
+
+</div>
+
+<script>
+
+async function verifyProduct() {
+
+    const productCode =
+        document.getElementById("productCode").value.trim();
+
+    const result =
+        document.getElementById("result");
+
+    if (productCode === "") {
+        result.style.display = "block";
+        result.className = "invalid";
+        result.innerHTML = "<h3>Please enter a product code.</h3>";
+        return;
+    }
+
+    try {
+
+        const response = await fetch(
+            "/api/products/verify/" +
+            encodeURIComponent(productCode)
+        );
+
+        const data = await response.json();
+
+        result.style.display = "block";
+
+        if (data.valid) {
+
+            result.className = "valid";
+
+            result.innerHTML = `
+                <h2>✅ Genuine Product</h2>
+                <p><strong>Product:</strong> ${data.productName}</p>
+                <p><strong>Product Code:</strong> ${data.productCode}</p>
+                <p>${data.message}</p>
+            `;
+
+        } else {
+
+            result.className = "invalid";
+
+            result.innerHTML = `
+                <h2>❌ Product Not Valid</h2>
+                <p><strong>Product Code:</strong> ${data.productCode}</p>
+                <p>${data.message}</p>
+            `;
+        }
+
+    } catch (error) {
+
+        result.style.display = "block";
+        result.className = "invalid";
+
+        result.innerHTML =
+            "<h3>Unable to connect to the server.</h3>";
+    }
+}
+
+</script>
+
+</body>
+</html>

@@ -1,0 +1,1825 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TrueReturn</title>
+
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            background: #f5f7fb;
+            color: #222;
+        }
+
+        header {
+            background: #111827;
+            color: white;
+            padding: 25px 20px;
+            text-align: center;
+        }
+
+        header h1 {
+            margin: 0;
+            font-size: 32px;
+        }
+
+        header p {
+            margin: 8px 0 0;
+            color: #d1d5db;
+        }
+
+        .container {
+            width: 92%;
+            max-width: 1000px;
+            margin: 35px auto;
+        }
+
+        .login-container {
+            width: 90%;
+            max-width: 450px;
+            margin: 100px auto;
+            background: white;
+            padding: 35px;
+            border-radius: 14px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+            text-align: center;
+        }
+
+        .login-container h1 {
+            margin-bottom: 10px;
+        }
+
+        .login-container p {
+            color: #666;
+            margin-bottom: 25px;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 25px;
+        }
+
+        .card {
+            min-width: 0;
+            background: white;
+            padding: 25px;
+            border-radius: 14px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+        }
+
+        .card h2 {
+            margin-top: 0;
+            margin-bottom: 20px;
+        }
+
+        input,
+        select,
+        textarea {
+            width: 100%;
+            padding: 12px;
+            margin-bottom: 14px;
+            border: 1px solid #d1d5db;
+            border-radius: 8px;
+            font-size: 15px;
+            font-family: inherit;
+        }
+
+        input[type="file"] {
+            padding: 8px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 7px;
+            font-weight: 600;
+        }
+
+        button {
+            width: 100%;
+            padding: 12px;
+            border: none;
+            border-radius: 8px;
+            background: #111827;
+            color: white;
+            font-size: 15px;
+            cursor: pointer;
+            margin-bottom: 10px;
+        }
+
+        button:hover {
+            opacity: 0.85;
+        }
+
+        button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .logout-button {
+            width: auto;
+            padding: 10px 20px;
+            background: #dc2626;
+            display: block;
+            margin: 0 auto 25px;
+        }
+
+        .result {
+            margin-top: 18px;
+            padding: 18px;
+            border-radius: 10px;
+            display: none;
+            overflow-wrap: anywhere;
+        }
+
+        .success {
+            background: #ecfdf5;
+            border: 1px solid #86efac;
+        }
+
+        .invalid {
+            background: #fef2f2;
+            border: 1px solid #fca5a5;
+        }
+
+        .full-width {
+            grid-column: 1 / -1;
+        }
+
+        .product-card {
+            background: #f9fafb;
+            padding: 15px;
+            margin-top: 12px;
+            border-radius: 10px;
+            border: 1px solid #e5e7eb;
+            overflow-wrap: anywhere;
+        }
+
+        .product-card p {
+            margin: 6px 0;
+        }
+
+        .role {
+            text-align: center;
+            margin-bottom: 20px;
+            font-weight: bold;
+        }
+
+        footer {
+            text-align: center;
+            padding: 25px;
+            color: #6b7280;
+        }
+
+        #loginPage {
+            display: block;
+        }
+
+        #appPage {
+            display: none;
+        }
+
+        #qr-reader {
+            width: 100%;
+            max-width: 500px;
+            margin: 20px auto;
+        }
+
+        hr {
+            border: 0;
+            border-top: 1px solid #e5e7eb;
+            margin: 20px 0;
+        }
+
+        @media (max-width: 700px) {
+            .grid {
+                grid-template-columns: 1fr;
+            }
+
+            .full-width {
+                grid-column: auto;
+            }
+
+            .container {
+                width: 94%;
+            }
+
+            .login-container {
+                margin: 50px auto;
+                padding: 25px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+<!-- LOGIN PAGE -->
+<div id="loginPage">
+    <div class="login-container">
+        <h1>TrueReturn</h1>
+        <p>Product Verification System</p>
+
+        <form id="loginForm">
+            <input
+                type="text"
+                id="loginUsername"
+                placeholder="Username"
+                autocomplete="username"
+                required
+            >
+
+            <input
+                type="password"
+                id="loginPassword"
+                placeholder="Password"
+                autocomplete="current-password"
+                required
+            >
+
+            <button type="submit">Login</button>
+        </form>
+
+        <div id="loginResult" class="result" role="status"></div>
+    </div>
+</div>
+
+<!-- MAIN APPLICATION -->
+<div id="appPage">
+
+    <header>
+        <h1>TrueReturn</h1>
+        <p>Product Verification &amp; Return Management System</p>
+    </header>
+
+    <div class="container">
+
+        <div id="roleDisplay" class="role"></div>
+
+        <button
+            type="button"
+            class="logout-button"
+            onclick="logout()"
+        >
+            Logout
+        </button>
+
+        <div class="grid">
+
+            <!-- VERIFY PRODUCT: ADMIN -->
+            <div class="card admin-section" style="display:none">
+                <h2>🔍 Verify Product</h2>
+
+                <label for="productCode">Product Code</label>
+                <input
+                    type="text"
+                    id="productCode"
+                    placeholder="Enter Product Code"
+                >
+
+                <button type="button" onclick="verifyProduct()">
+                    Verify Product
+                </button>
+
+                <div id="result" class="result" role="status"></div>
+            </div>
+
+            <!-- REGISTER PRODUCT: ADMIN -->
+            <div class="card admin-section" style="display:none">
+                <h2>📦 Register Product</h2>
+
+                <label for="productName">Product Name</label>
+                <input type="text" id="productName" placeholder="Product Name">
+
+                <label for="productDescription">Description</label>
+                <input
+                    type="text"
+                    id="productDescription"
+                    placeholder="Product Description"
+                >
+
+                <label for="productPrice">Price (₹)</label>
+                <input
+                    type="number"
+                    id="productPrice"
+                    placeholder="Product Price"
+                    min="0.01"
+                    step="0.01"
+                >
+
+                <label for="newProductCode">Product Code</label>
+                <input
+                    type="text"
+                    id="newProductCode"
+                    placeholder="Product Code"
+                >
+
+                <label for="productCategory">Category</label>
+                <select id="productCategory">
+                    <option value="">Select Product Category</option>
+                    <option value="Laptop">Laptop</option>
+                    <option value="Mobile">Mobile</option>
+                    <option value="Clothes">Clothes</option>
+                    <option value="Ornaments">Ornaments</option>
+                    <option value="Washing Machine">Washing Machine</option>
+                    <option value="Bluetooth Device">Bluetooth Device</option>
+                </select>
+
+                <label for="originalWeight">Original Product Weight (grams)</label>
+                <input
+                    type="number"
+                    id="originalWeight"
+                    name="originalWeight"
+                    min="0.01"
+                    step="0.01"
+                    placeholder="Enter original weight in grams"
+                    required
+                >
+
+                <h3>📸 Original Product Photos</h3>
+                <p>Upload exactly 4 original product photos.</p>
+
+                <label for="originalPhoto1">Original Photo 1</label>
+                <input type="file" id="originalPhoto1"
+                       accept="image/jpeg,image/png,image/webp">
+
+                <label for="originalPhoto2">Original Photo 2</label>
+                <input type="file" id="originalPhoto2"
+                       accept="image/jpeg,image/png,image/webp">
+
+                <label for="originalPhoto3">Original Photo 3</label>
+                <input type="file" id="originalPhoto3"
+                       accept="image/jpeg,image/png,image/webp">
+
+                <label for="originalPhoto4">Original Photo 4</label>
+                <input type="file" id="originalPhoto4"
+                       accept="image/jpeg,image/png,image/webp">
+
+                <button type="button" onclick="registerProduct()">
+                    Register Product
+                </button>
+
+                <div id="registerResult" class="result" role="status"></div>
+            </div>
+
+            <!-- UPDATE STATUS: DELIVERY ONLY -->
+            <div class="card delivery-section" style="display:none">
+                <h2>⚙️ Update Product Status</h2>
+
+                <label for="statusProductCode">Product Code</label>
+                <input
+                    type="text"
+                    id="statusProductCode"
+                    placeholder="Enter Product Code"
+                >
+
+                <label for="productStatus">New Status</label>
+                <select id="productStatus">
+                    <option value="ACTIVE">ACTIVE</option>
+                    <option value="RETURNED">RETURNED</option>
+                </select>
+
+                <button type="button" onclick="updateProductStatus()">
+                    Update Status
+                </button>
+
+                <div id="statusResult" class="result" role="status"></div>
+            </div>
+
+            <!-- RETURN PRODUCT: DELIVERY -->
+            <div class="card delivery-section" style="display:none">
+                <h2>↩️ TRUE-RETURN Verification</h2>
+
+                <label for="returnProductCode">Product Code / QR Code</label>
+                <input
+                    type="text"
+                    id="returnProductCode"
+                    placeholder="Scan or enter Product Code"
+                >
+
+                <button type="button" onclick="scanProduct()">
+                    📷 Scan Product
+                </button>
+
+                <div id="qr-reader" style="display:none"></div>
+
+                <hr>
+
+                <label for="returnCategory">Product Category</label>
+                <select id="returnCategory">
+                    <option value="">Select Product Category</option>
+                    <option value="Laptop">Laptop</option>
+                    <option value="Mobile">Mobile</option>
+                    <option value="Clothes">Clothes</option>
+                    <option value="Ornaments">Ornaments</option>
+                    <option value="Washing Machine">Washing Machine</option>
+                    <option value="Bluetooth Device">Bluetooth Device</option>
+                </select>
+
+                <label for="returnReason">Return Reason</label>
+                <input
+                    type="text"
+                    id="returnReason"
+                    placeholder="Enter Return Reason"
+                >
+
+                <hr>
+
+                <h3>📸 Returned Product Photos</h3>
+                <p>Exactly 4 photos are compulsory.</p>
+
+                <label for="photo1">Photo 1</label>
+                <input type="file" id="photo1"
+                       accept="image/jpeg,image/png,image/webp"
+                       capture="environment">
+
+                <label for="photo2">Photo 2</label>
+                <input type="file" id="photo2"
+                       accept="image/jpeg,image/png,image/webp"
+                       capture="environment">
+
+                <label for="photo3">Photo 3</label>
+                <input type="file" id="photo3"
+                       accept="image/jpeg,image/png,image/webp"
+                       capture="environment">
+
+                <label for="photo4">Photo 4</label>
+                <input type="file" id="photo4"
+                       accept="image/jpeg,image/png,image/webp"
+                       capture="environment">
+
+                <hr>
+
+                <h3>📡 Live Hardware Readings</h3>
+
+                <div class="product-card">
+                    <p><strong>Connection:</strong>
+                        <span id="hardwareStatus">Waiting for ESP32...</span>
+                    </p>
+
+                    <p><strong>RFID UID:</strong>
+                        <span id="hardwareUid">Not received</span>
+                    </p>
+
+                    <p><strong>Live Weight:</strong>
+                        <span id="hardwareWeight">Not received</span>
+                    </p>
+
+                    <p>
+                        <strong>Captured Weight:</strong>
+                        <span id="capturedWeight">Not captured</span>
+                    </p>
+
+                    <button type="button" onclick="captureWeight()">
+                        📌 Capture Weight
+                    </button>
+
+                    <button type="button" onclick="clearCapturedWeight()">
+                        🗑️ Clear Captured Weight
+                    </button>
+
+                    <p id="captureWeightMessage"></p>
+
+                    <p><strong>Last Updated:</strong>
+                        <span id="hardwareTime">--</span>
+                    </p>
+                </div>
+
+                <h3>🔍 Product Verification</h3>
+
+                <p>
+                    The AI model automatically compares the original
+                    product photos with the returned product photos.
+                </p>
+
+                <p><strong>ML Result:</strong> Determined automatically by AI</p>
+
+                <label for="rfidResult">RFID Result (Hardware)</label>
+                <select id="rfidResult">
+                    <option value="">Not Available</option>
+                    <option value="MATCHED">MATCHED</option>
+                    <option value="MISMATCHED">MISMATCHED</option>
+                    <option value="N/A">N/A</option>
+                </select>
+
+                <p>
+                    <strong>Weight Result:</strong>
+                    Calculated automatically by the backend using the
+                    registered weight and captured weight. A difference
+                    of 10 grams or less passes.
+                </p>
+
+                <label for="returnRemark">Remark (Optional)</label>
+                <textarea
+                    id="returnRemark"
+                    placeholder="Additional information about the return"
+                    rows="4"
+                ></textarea>
+
+                <button type="button" onclick="returnProduct()">
+                    🚀 Submit Return Verification
+                </button>
+
+                <div id="returnResult" class="result" role="status"></div>
+            </div>
+
+            <!-- RETURN HISTORY: ADMIN -->
+            <div class="card full-width admin-section" style="display:none">
+                <h2>📋 Return History</h2>
+
+                <button type="button" onclick="getReturnHistory()">
+                    View Return History
+                </button>
+
+                <div id="historyResult" class="result"></div>
+            </div>
+
+            <!-- ALL PRODUCTS: ADMIN -->
+            <div class="card full-width admin-section" style="display:none">
+                <h2>🛍️ All Products</h2>
+
+                <button type="button" onclick="getAllProducts()">
+                    View All Products
+                </button>
+
+                <div id="productsResult" class="result"></div>
+            </div>
+
+            <!-- VERIFIED PRODUCTS: ADMIN -->
+            <div class="card full-width admin-section" style="display:none">
+                <h2>✅ Verified Products</h2>
+
+                <p>
+                    Products whose return verification was completed
+                    successfully.
+                </p>
+
+                <button type="button" onclick="getVerifiedProducts()">
+                    View Verified Products
+                </button>
+
+                <div id="verifiedProductsResult" class="result"></div>
+            </div>
+
+        </div>
+    </div>
+
+    <footer>
+        TrueReturn © 2026 | Product Verification System
+    </footer>
+
+</div>
+
+<script src="https://unpkg.com/html5-qrcode"></script>
+
+<script>
+"use strict";
+
+// ==================================================
+// CSRF TOKEN HELPER
+// ==================================================
+
+function getCsrfToken() {
+    const cookies = document.cookie.split(";");
+
+    for (const cookie of cookies) {
+        const trimmedCookie = cookie.trim();
+
+        if (trimmedCookie.startsWith("XSRF-TOKEN=")) {
+            return decodeURIComponent(
+                trimmedCookie.substring("XSRF-TOKEN=".length)
+            );
+        }
+    }
+
+    return null;
+}
+
+// ==================================================
+// COMMON HELPERS
+// ==================================================
+
+const ALLOWED_IMAGE_TYPES = [
+    "image/jpeg",
+    "image/png",
+    "image/webp"
+];
+
+const MAX_IMAGE_SIZE = 15 * 1024 * 1024;
+
+function showResult(element, message, type = "invalid") {
+    element.style.display = "block";
+    element.className = "result " + type;
+    element.textContent = message;
+}
+
+async function readResponseMessage(response) {
+    const text = await response.text();
+
+    if (!text) {
+        return response.ok
+            ? "Operation completed successfully."
+            : "The request failed.";
+    }
+
+    try {
+        const data = JSON.parse(text);
+        return data.message || data.error || text;
+    } catch {
+        return text;
+    }
+}
+
+function validatePhotos(photos, description) {
+    if (photos.length !== 4 || photos.some(photo => !photo)) {
+        return "Please upload all 4 " + description + " photos.";
+    }
+
+    for (let index = 0; index < photos.length; index++) {
+        const photo = photos[index];
+
+        if (!ALLOWED_IMAGE_TYPES.includes(photo.type)) {
+            return "Photo " + (index + 1) +
+                " must be JPG, PNG, or WEBP.";
+        }
+
+        if (photo.size <= 0 || photo.size > MAX_IMAGE_SIZE) {
+            return "Photo " + (index + 1) +
+                " must be non-empty and 15 MB or smaller.";
+        }
+    }
+
+    return null;
+}
+
+function appendFieldsSafely(container, fields) {
+    fields.forEach(([label, value]) => {
+        const paragraph = document.createElement("p");
+        const strong = document.createElement("strong");
+
+        strong.textContent = label + ": ";
+        paragraph.appendChild(strong);
+        paragraph.appendChild(
+            document.createTextNode(String(value ?? "Not available"))
+        );
+
+        container.appendChild(paragraph);
+    });
+}
+
+function buildCards(container, records, fieldsForRecord, headingForRecord) {
+    const fragment = document.createDocumentFragment();
+
+    records.forEach(record => {
+        const card = document.createElement("div");
+        card.className = "product-card";
+
+        const heading = document.createElement("h3");
+        heading.textContent = headingForRecord(record);
+        card.appendChild(heading);
+
+        appendFieldsSafely(card, fieldsForRecord(record));
+        fragment.appendChild(card);
+    });
+
+    container.replaceChildren(fragment);
+}
+
+// ==================================================
+// LOGIN
+// ==================================================
+
+document.getElementById("loginForm").addEventListener("submit", event => {
+    event.preventDefault();
+    login();
+});
+
+async function login() {
+    const username = document.getElementById("loginUsername").value.trim();
+    const password = document.getElementById("loginPassword").value;
+    const result = document.getElementById("loginResult");
+
+    if (!username || !password) {
+        showResult(result, "Please enter username and password.");
+        return;
+    }
+
+    try {
+        showResult(result, "Logging in...", "");
+
+        const response = await fetch("/api/auth/login", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            credentials: "same-origin",
+            body: JSON.stringify({ username, password })
+        });
+
+        let data;
+
+        try {
+            data = await response.json();
+        } catch {
+            throw new Error("The server returned an invalid login response.");
+        }
+
+        if (!response.ok || data.success !== true) {
+            showResult(
+                result,
+                data.message || "Invalid username or password."
+            );
+            return;
+        }
+
+        if (data.role !== "ADMIN" && data.role !== "DELIVERY") {
+            showResult(result, "Your account role is not recognized.");
+            return;
+        }
+
+        document.getElementById("loginPage").style.display = "none";
+        document.getElementById("appPage").style.display = "block";
+
+        document.getElementById("roleDisplay").textContent =
+            "Logged in as: " + data.username + " (" + data.role + ")";
+
+        document.querySelectorAll(".admin-section").forEach(section => {
+            section.style.display =
+                data.role === "ADMIN" ? "block" : "none";
+        });
+
+        document.querySelectorAll(".delivery-section").forEach(section => {
+            section.style.display =
+                data.role === "DELIVERY" ? "block" : "none";
+        });
+
+        document.getElementById("loginPassword").value = "";
+        result.style.display = "none";
+
+    } catch (error) {
+        console.error("Login error:", error);
+        showResult(
+            result,
+            error.message || "Unable to process login."
+        );
+    }
+}
+
+// ==================================================
+// LOGOUT
+// ==================================================
+
+async function logout() {
+    try {
+        const csrfToken = getCsrfToken();
+
+        if (!csrfToken) {
+            alert("CSRF token is missing. Please refresh the page and try again.");
+            return;
+        }
+
+        const response = await fetch("/api/auth/logout", {
+            method: "POST",
+            credentials: "same-origin",
+            headers: {
+                "X-XSRF-TOKEN": csrfToken
+            }
+        });
+
+        if (!response.ok) {
+            alert("Unable to log out. Please try again.");
+            return;
+        }
+
+        await stopQrScanner();
+
+        document.getElementById("appPage").style.display = "none";
+        document.getElementById("loginPage").style.display = "block";
+
+        document.getElementById("loginUsername").value = "";
+        document.getElementById("loginPassword").value = "";
+        document.getElementById("roleDisplay").textContent = "";
+
+        const loginResult = document.getElementById("loginResult");
+        loginResult.style.display = "none";
+        loginResult.textContent = "";
+
+        document.querySelectorAll(
+            ".admin-section, .delivery-section"
+        ).forEach(section => {
+            section.style.display = "none";
+        });
+
+    } catch (error) {
+        console.error("Logout error:", error);
+        alert("Unable to contact the server. Please try again.");
+    }
+}
+
+// ==================================================
+// REGISTER PRODUCT
+// ==================================================
+
+async function registerProduct() {
+    const name =
+        document.getElementById("productName").value.trim();
+
+    const description =
+        document.getElementById("productDescription").value.trim();
+
+    const price =
+        document.getElementById("productPrice").value;
+
+    const originalWeight =
+        document.getElementById("originalWeight").value;
+
+    const productCode =
+        document.getElementById("newProductCode").value.trim();
+
+    const category =
+        document.getElementById("productCategory").value;
+
+    const result =
+        document.getElementById("registerResult");
+
+    const photoInputs = [
+        document.getElementById("originalPhoto1"),
+        document.getElementById("originalPhoto2"),
+        document.getElementById("originalPhoto3"),
+        document.getElementById("originalPhoto4")
+    ];
+
+    const photos = photoInputs.map(input => input.files[0]);
+
+    if (
+        !name ||
+        !description ||
+        !price ||
+        !originalWeight ||
+        !productCode ||
+        !category
+    ) {
+        showResult(result, "Please fill all product fields.");
+        return;
+    }
+
+    if (
+        !Number.isFinite(Number(price)) ||
+        Number(price) <= 0
+    ) {
+        showResult(result, "Please enter a valid product price.");
+        return;
+    }
+
+    if (
+        !Number.isFinite(Number(originalWeight)) ||
+        Number(originalWeight) <= 0
+    ) {
+        showResult(
+            result,
+            "Please enter a valid original weight in grams."
+        );
+        return;
+    }
+
+    const photoError = validatePhotos(photos, "original product");
+
+    if (photoError) {
+        showResult(result, photoError);
+        return;
+    }
+
+    const formData = new FormData();
+
+    formData.append("name", name);
+    formData.append("description", description);
+    formData.append("price", price);
+    formData.append("originalWeight", originalWeight);
+    formData.append("productCode", productCode);
+    formData.append("category", category);
+
+    photos.forEach((photo, index) => {
+        formData.append("originalPhoto" + (index + 1), photo);
+    });
+
+    try {
+        showResult(
+            result,
+            "Registering product and uploading photos...",
+            ""
+        );
+
+        const csrfToken = getCsrfToken();
+
+        if (!csrfToken) {
+            showResult(
+                result,
+                "CSRF token is missing. Please refresh the page and try again."
+            );
+            return;
+        }
+
+        const response = await fetch("/api/products", {
+            method: "POST",
+            credentials: "same-origin",
+            headers: {
+                "X-XSRF-TOKEN": csrfToken
+            },
+            body: formData
+        });
+
+        const message = await response.text();
+
+        if (!response.ok) {
+            throw new Error(message || "Product registration failed.");
+        }
+
+        let data = null;
+
+        try {
+            data = JSON.parse(message);
+        } catch {
+            // The backend may return plain text.
+        }
+
+        showResult(
+            result,
+            data
+                ? "Product " + (data.name ?? name) +
+                  " registered successfully. Code: " +
+                  (data.productCode ?? productCode) +
+                  ". Original weight: " +
+                  (data.originalWeight ?? originalWeight) + " g."
+                : (message || "Product registered successfully."),
+            "success"
+        );
+
+        document.getElementById("productName").value = "";
+        document.getElementById("productDescription").value = "";
+        document.getElementById("productPrice").value = "";
+        document.getElementById("originalWeight").value = "";
+        document.getElementById("newProductCode").value = "";
+        document.getElementById("productCategory").value = "";
+
+        photoInputs.forEach(input => {
+            input.value = "";
+        });
+
+    } catch (error) {
+        console.error("Registration error:", error);
+
+        showResult(
+            result,
+            error.message || "Unable to register product."
+        );
+    }
+}
+
+// ==================================================
+// VERIFY PRODUCT
+// ==================================================
+
+async function verifyProduct() {
+    const productCode =
+        document.getElementById("productCode").value.trim();
+    const result = document.getElementById("result");
+
+    if (!productCode) {
+        showResult(result, "Please enter a product code.");
+        return;
+    }
+
+    try {
+        showResult(result, "Verifying product...", "");
+
+        const response = await fetch(
+            "/api/products/verify/" + encodeURIComponent(productCode),
+            {
+                method: "GET",
+                credentials: "same-origin"
+            }
+        );
+
+        let data;
+
+        try {
+            data = await response.json();
+        } catch {
+            throw new Error("The server returned an invalid response.");
+        }
+
+        if (!response.ok) {
+            throw new Error(data.message || "Unable to verify this product.");
+        }
+
+        result.className =
+            "result " + (data.valid ? "success" : "invalid");
+        result.style.display = "block";
+
+        const fragment = document.createDocumentFragment();
+        const heading = document.createElement("h2");
+
+        heading.textContent = data.valid
+            ? "✅ Genuine Product"
+            : "❌ Product Not Valid";
+
+        fragment.appendChild(heading);
+
+        const fields = [
+            ["Product", data.productName ?? "Unknown"],
+            ["Product Code", data.productCode ?? productCode],
+            ["Category", data.category ?? "Not specified"],
+            [
+                "Price",
+                data.price == null ? "Not available" : "₹" + data.price
+            ],
+            ["Status", data.status ?? "Unknown"],
+            ["Message", data.message ?? "No additional details."]
+        ];
+
+        appendFieldsSafely(fragment, fields);
+        result.replaceChildren(fragment);
+
+    } catch (error) {
+        console.error("Product verification error:", error);
+        showResult(
+            result,
+            error.message || "Unable to connect to the server."
+        );
+    }
+}
+
+// ==================================================
+// UPDATE PRODUCT STATUS
+// ==================================================
+
+async function updateProductStatus() {
+    const productCode =
+        document.getElementById("statusProductCode").value.trim();
+    const status = document.getElementById("productStatus").value;
+    const result = document.getElementById("statusResult");
+
+    if (!productCode) {
+        showResult(result, "Please enter a product code.");
+        return;
+    }
+
+    if (!status) {
+        showResult(result, "Please select a product status.");
+        return;
+    }
+
+    try {
+        showResult(result, "Updating product status...", "");
+
+        const csrfToken = getCsrfToken();
+
+        if (!csrfToken) {
+            showResult(
+                result,
+                "CSRF token is missing. Please refresh the page and try again."
+            );
+            return;
+        }
+
+        const response = await fetch(
+            "/api/products/status/" +
+            encodeURIComponent(productCode) +
+            "?status=" + encodeURIComponent(status),
+            {
+                method: "PUT",
+                credentials: "same-origin",
+                headers: {
+                    "X-XSRF-TOKEN": csrfToken
+                }
+            }
+        );
+
+        const message = await readResponseMessage(response);
+
+        if (!response.ok) {
+            throw new Error(
+                response.status === 401 || response.status === 403
+                    ? "Access denied. Please log in with an authorized delivery account."
+                    : message
+            );
+        }
+
+        showResult(result, message, "success");
+
+    } catch (error) {
+        console.error("Status update error:", error);
+        showResult(
+            result,
+            error.message || "Unable to update product status."
+        );
+    }
+}
+
+// ==================================================
+// QR SCANNING
+// ==================================================
+
+let activeQrScanner = null;
+
+async function stopQrScanner() {
+    if (!activeQrScanner) {
+        return;
+    }
+
+    const scanner = activeQrScanner;
+    activeQrScanner = null;
+
+    try {
+        await scanner.stop();
+    } catch (error) {
+        console.warn("QR scanner stop:", error);
+    }
+
+    try {
+        scanner.clear();
+    } catch (error) {
+        console.warn("QR scanner cleanup:", error);
+    }
+
+    const scannerDiv = document.getElementById("qr-reader");
+
+    if (scannerDiv) {
+        scannerDiv.style.display = "none";
+    }
+}
+
+async function scanProduct() {
+    const result = document.getElementById("returnResult");
+    const scannerDiv = document.getElementById("qr-reader");
+    const codeInput = document.getElementById("returnProductCode");
+
+    if (typeof Html5Qrcode === "undefined") {
+        showResult(
+            result,
+            "QR scanner library is unavailable. Enter the product code manually."
+        );
+        return;
+    }
+
+    await stopQrScanner();
+
+    scannerDiv.style.display = "block";
+
+    showResult(
+        result,
+        "Point your camera at the product QR code.",
+        "success"
+    );
+
+    const scanner = new Html5Qrcode("qr-reader");
+    activeQrScanner = scanner;
+
+    let scanHandled = false;
+
+    try {
+        await scanner.start(
+            { facingMode: "environment" },
+            {
+                fps: 10,
+                qrbox: { width: 250, height: 250 }
+            },
+            async decodedText => {
+                if (scanHandled) {
+                    return;
+                }
+
+                scanHandled = true;
+
+                const scannedCode = decodedText.trim();
+
+                await stopQrScanner();
+
+                if (!scannedCode) {
+                    showResult(
+                        result,
+                        "The QR code does not contain a product code."
+                    );
+                    return;
+                }
+
+                codeInput.value = scannedCode;
+                await verifyScannedProduct(scannedCode);
+            },
+            () => {
+                // Ignore temporary QR detection failures.
+            }
+        );
+
+    } catch (error) {
+        console.error("QR scanner error:", error);
+
+        if (activeQrScanner === scanner) {
+            activeQrScanner = null;
+        }
+
+        try {
+            scanner.clear();
+        } catch {
+            // Ignore cleanup errors.
+        }
+
+        scannerDiv.style.display = "none";
+
+        showResult(
+            result,
+            "Camera could not be opened. Check camera permissions or enter the product code manually."
+        );
+    }
+}
+
+// ==================================================
+// VERIFY SCANNED PRODUCT
+// ==================================================
+
+async function verifyScannedProduct(productCode) {
+    const result = document.getElementById("returnResult");
+
+    try {
+        const response = await fetch(
+            "/api/products/verify/" + encodeURIComponent(productCode),
+            {
+                method: "GET",
+                credentials: "same-origin"
+            }
+        );
+
+        let data;
+
+        try {
+            data = await response.json();
+        } catch {
+            throw new Error("The server returned an invalid product response.");
+        }
+
+        if (!response.ok || !data.productCode) {
+            throw new Error(
+                data.message || "Product not found for this QR code."
+            );
+        }
+
+        const categorySelect = document.getElementById("returnCategory");
+
+        if (data.category) {
+            categorySelect.value = data.category;
+        }
+
+        result.className =
+            "result " + (data.valid ? "success" : "invalid");
+        result.style.display = "block";
+
+        const heading = document.createElement("h3");
+        heading.textContent = data.valid
+            ? "Product Found"
+            : "Product Record Found";
+
+        result.replaceChildren(heading);
+
+        appendFieldsSafely(result, [
+            ["Product", data.productName ?? data.name ?? "Unknown"],
+            ["Product Code", data.productCode],
+            ["Category", data.category ?? "Not available"],
+            ["Status", data.status ?? "Unknown"]
+        ]);
+
+        const note = document.createElement("p");
+        note.textContent =
+            "Take exactly four photos to continue return verification.";
+        result.appendChild(note);
+
+    } catch (error) {
+        console.error("Scanned product verification error:", error);
+        showResult(
+            result,
+            error.message || "Unable to verify the scanned product."
+        );
+    }
+}
+
+// ==================================================
+// RETURN PRODUCT
+// ==================================================
+
+async function returnProduct() {
+    const productCode =
+        document.getElementById("returnProductCode").value.trim();
+    const category =
+        document.getElementById("returnCategory").value;
+    const reason =
+        document.getElementById("returnReason").value.trim();
+
+    const photos = [
+        document.getElementById("photo1").files[0],
+        document.getElementById("photo2").files[0],
+        document.getElementById("photo3").files[0],
+        document.getElementById("photo4").files[0]
+    ];
+
+    const rfidResult =
+        document.getElementById("rfidResult").value;
+    const remark =
+        document.getElementById("returnRemark").value.trim();
+    const result =
+        document.getElementById("returnResult");
+
+    if (!productCode) {
+        showResult(result, "Please scan or enter the product code.");
+        return;
+    }
+
+    if (!category) {
+        showResult(result, "Please select the product category.");
+        return;
+    }
+
+    if (!reason) {
+        showResult(result, "Please enter the return reason.");
+        return;
+    }
+
+    const photoError = validatePhotos(photos, "return");
+
+    if (photoError) {
+        showResult(result, photoError);
+        return;
+    }
+
+    if (
+        capturedWeight === null ||
+        capturedProductCode !== productCode
+    ) {
+        showResult(
+            result,
+            "❌ Capture the hardware weight for this product first."
+        );
+        return;
+    }
+
+    const formData = new FormData();
+
+    formData.append("reason", reason);
+    formData.append("category", category);
+    formData.append("capturedWeight", String(capturedWeight));
+    formData.append("capturedWeightUnit", "g");
+
+    photos.forEach((photo, index) => {
+        formData.append("photo" + (index + 1), photo);
+    });
+
+    formData.append("rfidResult", rfidResult);
+    formData.append("remark", remark);
+
+    try {
+        showResult(
+            result,
+            "Uploading photos and verifying the returned product...",
+            "success"
+        );
+
+        const csrfToken = getCsrfToken();
+
+        if (!csrfToken) {
+            showResult(
+                result,
+                "CSRF token is missing. Please refresh the page and try again."
+            );
+            return;
+        }
+
+        const response = await fetch(
+            "/api/products/return/" +
+                encodeURIComponent(productCode),
+            {
+                method: "POST",
+                credentials: "same-origin",
+                headers: {
+                    "X-XSRF-TOKEN": csrfToken
+                },
+                body: formData
+            }
+        );
+
+        const message = await readResponseMessage(response);
+
+        if (!response.ok) {
+            throw new Error(
+                message || "Return verification failed."
+            );
+        }
+
+        const normalizedMessage = String(message).toUpperCase();
+
+        const verificationFailed =
+            normalizedMessage.includes("NOT VERIFIED") ||
+            normalizedMessage.includes("SUSPICIOUS") ||
+            normalizedMessage.includes("REJECTED") ||
+            normalizedMessage.includes("FAILED");
+
+        showResult(
+            result,
+            message,
+            verificationFailed ? "invalid" : "success"
+        );
+
+        ["photo1", "photo2", "photo3", "photo4"].forEach(id => {
+            document.getElementById(id).value = "";
+        });
+
+        document.getElementById("returnReason").value = "";
+        document.getElementById("returnRemark").value = "";
+
+        // Keep the captured reading visible until explicitly cleared.
+        // It is not affected by subsequent live hardware readings.
+
+    } catch (error) {
+        console.error("Return verification error:", error);
+
+        showResult(
+            result,
+            error.message || "Unable to submit return verification."
+        );
+    }
+}
+
+// ==================================================
+// RETURN HISTORY
+// ==================================================
+
+async function getReturnHistory() {
+    const result = document.getElementById("historyResult");
+
+    showResult(result, "Loading return history...", "");
+
+    try {
+        const response = await fetch("/api/products/returns", {
+            method: "GET",
+            credentials: "same-origin"
+        });
+
+        if (!response.ok) {
+            throw new Error(
+                response.status === 401 || response.status === 403
+                    ? "Access denied. Please log in with an authorized admin account."
+                    : await readResponseMessage(response)
+            );
+        }
+
+        const data = await response.json();
+
+        if (!Array.isArray(data)) {
+            throw new Error("The server returned an invalid history response.");
+        }
+
+        if (data.length === 0) {
+            showResult(result, "No return history found.", "success");
+            return;
+        }
+
+        result.style.display = "block";
+        result.className = "result";
+
+        buildCards(
+            result,
+            data,
+            record => [
+                ["Product Code", record.productCode],
+                ["Category", record.category ?? "Not specified"],
+                ["Reason", record.reason ?? "Not specified"],
+                ["ML Result", record.mlResult ?? "Not available"],
+                ["RFID Result", record.rfidResult ?? "Not available"],
+                ["Weight Result", record.weightResult ?? "Not available"],
+                ["Final Result", record.finalResult ?? "Not available"],
+                ["Remark", record.remark ?? "None"],
+                ["Approval", record.approvalStatus ?? "Pending"],
+                ["Date", record.returnDate ?? "Not available"]
+            ],
+            () => "Return Record"
+        );
+
+    } catch (error) {
+        console.error("Return history error:", error);
+        showResult(
+            result,
+            error.message || "Unable to load return history."
+        );
+    }
+}
+
+// ==================================================
+// ALL PRODUCTS
+// ==================================================
+
+async function getAllProducts() {
+    const result = document.getElementById("productsResult");
+
+    showResult(result, "Loading products...", "");
+
+    try {
+        const response = await fetch("/api/products/all", {
+            method: "GET",
+            credentials: "same-origin"
+        });
+
+        if (!response.ok) {
+            throw new Error(
+                response.status === 401 || response.status === 403
+                    ? "Access denied. Please log in with an authorized admin account."
+                    : await readResponseMessage(response)
+            );
+        }
+
+        const data = await response.json();
+
+        if (!Array.isArray(data)) {
+            throw new Error("The server returned an invalid products response.");
+        }
+
+        if (data.length === 0) {
+            showResult(result, "No products found.", "success");
+            return;
+        }
+
+        result.style.display = "block";
+        result.className = "result";
+
+        buildCards(
+            result,
+            data,
+            product => [
+                ["Product Code", product.productCode],
+                ["Category", product.category ?? "Not specified"],
+                [
+                    "Price",
+                    product.price == null
+                        ? "Not available"
+                        : "₹" + product.price
+                ],
+                [
+                    "Original Weight",
+                    product.originalWeight == null
+                        ? "Not available"
+                        : product.originalWeight + " g"
+                ],
+                ["Status", product.status ?? "Not available"]
+            ],
+            product => product.name ?? "Unnamed product"
+        );
+
+    } catch (error) {
+        console.error("All products error:", error);
+        showResult(
+            result,
+            error.message || "Unable to load products."
+        );
+    }
+}
+
+// ==================================================
+// VERIFIED PRODUCTS
+// ==================================================
+
+async function getVerifiedProducts() {
+    const result = document.getElementById("verifiedProductsResult");
+
+    showResult(result, "Loading verified products...", "");
+
+    try {
+        const response = await fetch("/api/products/returns", {
+            method: "GET",
+            credentials: "same-origin"
+        });
+
+        if (!response.ok) {
+            throw new Error(
+                response.status === 401 || response.status === 403
+                    ? "Access denied. Please log in with an authorized admin account."
+                    : await readResponseMessage(response)
+            );
+        }
+
+        const data = await response.json();
+
+        if (!Array.isArray(data)) {
+            throw new Error("The server returned an invalid response.");
+        }
+
+        const verifiedProducts = data.filter(
+            record => record.finalResult === "VERIFIED"
+        );
+
+        if (verifiedProducts.length === 0) {
+            showResult(result, "No verified products found.", "success");
+            return;
+        }
+
+        result.style.display = "block";
+        result.className = "result";
+
+        buildCards(
+            result,
+            verifiedProducts,
+            record => [
+                ["Product Code", record.productCode],
+                ["Category", record.category ?? "Not specified"],
+                ["Return Reason", record.reason ?? "Not specified"],
+                ["ML Result", record.mlResult ?? "N/A"],
+                ["RFID Result", record.rfidResult ?? "N/A"],
+                ["Weight Result", record.weightResult ?? "N/A"],
+                ["Final Result", record.finalResult ?? "N/A"],
+                ["Approval", record.approvalStatus ?? "N/A"],
+                ["Date", record.returnDate ?? "N/A"]
+            ],
+            () => "✅ Product Verified"
+        );
+
+    } catch (error) {
+        console.error("Verified products error:", error);
+        showResult(
+            result,
+            error.message || "Unable to load verified products."
+        );
+    }
+}
+
+// ==================================================
+// CAPTURE WEIGHT
+// ==================================================
+
+let latestHardwareReading = null;
+let capturedWeight = null;
+let capturedProductCode = null;
+
+function captureWeight() {
+    const productCode = document
+        .getElementById("returnProductCode")
+        .value.trim();
+
+    const message = document.getElementById("captureWeightMessage");
+
+    if (!productCode) {
+        message.textContent =
+            "❌ Enter or scan a product code first.";
+        message.style.color = "red";
+        return;
+    }
+
+    if (
+        !latestHardwareReading ||
+        latestHardwareReading.productCode !== productCode
+    ) {
+        message.textContent =
+            "❌ Waiting for hardware data for this product.";
+        message.style.color = "red";
+        return;
+    }
+
+    const receivedAt = Date.parse(
+        latestHardwareReading.receivedAt
+    );
+
+    if (
+        !Number.isFinite(receivedAt) ||
+        Date.now() - receivedAt > 10000 ||
+        Date.now() - receivedAt < -5000
+    ) {
+        message.textContent =
+            "❌ Reading is old. Wait for a fresh hardware reading.";
+        message.style.color = "red";
+        return;
+    }
+
+    const weight = Number(latestHardwareReading.weight);
+
+    if (!Number.isFinite(weight) || weight < 0) {
+        message.textContent =
+            "❌ Invalid weight received from hardware.";
+        message.style.color = "red";
+        return;
+    }
+
+    capturedWeight = weight;
+    capturedProductCode = productCode;
+
+    document.getElementById("capturedWeight").textContent =
+        capturedWeight.toFixed(2) + " g";
+
+    message.textContent =
+        "✅ Weight captured successfully! The captured value is fixed.";
+    message.style.color = "green";
+}
+
+function clearCapturedWeight() {
+    capturedWeight = null;
+    capturedProductCode = null;
+
+    document.getElementById("capturedWeight").textContent =
+        "Not captured";
+
+    document.getElementById("captureWeightMessage").textContent =
+        "Captured weight cleared. Place the product on the scale again.";
+
+    document.getElementById("captureWeightMessage").style.color = "";
+}
+
+// Clear captured weight when the product code changes.
+document
+    .getElementById("returnProductCode")
+    .addEventListener("input", () => {
+        const currentCode = document
+            .getElementById("returnProductCode")
+            .value.trim();
+
+        if (
+            capturedProductCode !== null &&
+            currentCode !== capturedProductCode
+        ) {
+            clearCapturedWeight();
+        }
+    });
+
+// ==================================================
+// LIVE HARDWARE READINGS
+// ==================================================
+
+async function updateHardwareReadings() {
+    const productCodeInput =
+        document.getElementById("returnProductCode");
+
+    const status = document.getElementById("hardwareStatus");
+    const uid = document.getElementById("hardwareUid");
+    const weight = document.getElementById("hardwareWeight");
+    const time = document.getElementById("hardwareTime");
+
+    if (!status || !uid || !weight || !time) {
+        return;
+    }
+
+    const productCode = productCodeInput
+        ? productCodeInput.value.trim()
+        : "";
+
+    if (!productCode) {
+        status.textContent = "Enter a product code";
+        return;
+    }
+
+    try {
+        const response = await fetch(
+            "/api/hardware/latest?productCode=" +
+            encodeURIComponent(productCode),
+            {
+                credentials: "same-origin",
+                cache: "no-store"
+            }
+        );
+
+        if (!response.ok) {
+            status.textContent = "Waiting for hardware data";
+            return;
+        }
+
+        const data = await response.json();
+
+        if (data.error) {
+            status.textContent = data.error;
+            return;
+        }
+
+        latestHardwareReading = data;
+
+        uid.textContent = data.uid ?? "Not received";
+
+        weight.textContent = data.weight == null
+            ? "Not received"
+            : Number(data.weight).toFixed(2) + " g";
+
+        time.textContent = data.receivedAt
+            ? new Date(data.receivedAt).toLocaleTimeString()
+            : "--";
+
+        status.textContent = "Connected — data received";
+
+    } catch (error) {
+        console.error("Hardware reading error:", error);
+        status.textContent = "Cannot reach hardware API";
+    }
+}
+
+updateHardwareReadings();
+setInterval(updateHardwareReadings, 2000);
+
+</script>
+
+</body>
+</html>
