@@ -54,3 +54,8 @@ __pycache__/
 Thumbs.db
 
 src/main/java/com/truereturn/config/PasswordGenerator.java
+
+vision-service/venv/
+vision-service/__pycache__/
+vision-service/test_images/
+vision-service/verification_history.csv

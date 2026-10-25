@@ -1,0 +1,8 @@
+opencv-python==4.11.0.86
+numpy==1.26.4
+Pillow==12.3.0
+scikit-image==0.26.0
+torch==2.14.0
+torchvision==0.29.0
+transformers==5.17.0
+scikit-learn==1.9.1
