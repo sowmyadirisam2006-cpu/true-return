@@ -1,0 +1,9 @@
+
+Flask
+flask-cors
+opencv-python-headless==4.11.0.86
+numpy==1.26.4
+Pillow==12.3.0
+scikit-image==0.26.0
+scikit-learn==1.9.1
+transformers==5.17.0
